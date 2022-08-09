@@ -1,0 +1,23 @@
+﻿@model Bill_Tracker.Models.ViewModels.VM_Partial_CreatePaymentForm
+<div class="container">
+    <div class="row">
+        <div class="col-3">
+            @Html.LabelFor(m => m.PaymentDate)
+            @Html.TextBoxFor(m => m.PaymentDate, "{0:d}", new { id = "CreatePayment_PaymentDate" })
+        </div>
+        <div class="col-3">
+            @Html.LabelFor(m => m.Amount)
+            @Html.TextBoxFor(m => m.Amount, null, new { id = "CreatePayment_Amount" })
+        </div>
+        <div class="col-6">
+            @Html.LabelFor(m => m.ReceiptLocation)
+            @Html.TextBoxFor(m => m.ReceiptLocation, null, new { id = "CreatePayment_ReceiptLocation", @class = "w-100" })
+        </div>
+    </div>
+    <div class="row">
+        @Html.LabelFor(m => m.Notes)
+        <div>
+            @Html.TextAreaFor(m => m.Notes, 10, 1, new { id = "CreatePayment_Notes", @class = "w-100" })
+        </div>
+    </div>
+</div>

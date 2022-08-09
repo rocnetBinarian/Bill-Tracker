@@ -1,0 +1,191 @@
+﻿@model Bill_Tracker.Models.ViewModels.VM_BillsIndex
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <h1 class="display-6">Bills</h1>
+</div>
+<div class="row">
+    <div class="col-2">
+        <button type="button" class="btn btn-primary mb-3" data-toggle="modal" data-target="#CreateBillModal">
+            Create Bill
+        </button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        @Html.ListBoxFor(m => m.BillIds, Model.BillList, new { @class = "w-100", id = "BillList", size = 20 })
+    </div>
+    <div class="col-md-8">
+        <div class="container">
+            <div class="row">
+                <div class="d-inline-block" style="padding: unset;">
+                    <div class="float-left">
+                        <label class="pt-1 float-left" style="width: unset;">Payments</label>
+                        <div id="PaymentLoadingSpinner" class="spinner-border float-left mb-2" role="status" style="visibility: hidden; margin-left: .5rem;">
+                        </div>
+                    </div>
+                    <div class="float-right">
+                        <button id="btn_payBill" type="button" class="btn btn-primary mb-3" data-toggle="modal" data-target="#CreatePaymentModal" disabled>
+                            Pay Bill
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <select id="PaymentList" class="w-100" multiple="multiple" style="height: 80px;">
+                </select>
+            </div>
+            <hr />
+            <div id="paymentDetails" class="row">
+                <div class="col-3">
+                    <label class="pt-1 text-decoration-underline">Payment Date</label>
+                    <p id="PaymentDate" class="text-success"><span style="visibility: hidden;">Placeholder</span></p>
+                </div>
+                <div class="col-2">
+                    <label class="pt-1 text-decoration-underline">Amount</label>
+                    <p id="PaymentAmount" class="text-success"><span style="visibility: hidden;">Placeholder</span></p>
+                </div>
+                <div class="col-7">
+                    <label class="pt-1 text-decoration-underline">Receipt Location</label>
+                    <p id="PaymentReceipt" class="text-success"><span style="visibility: hidden;">Placeholder</span></p>
+                </div>
+            </div>
+            <div class="row">
+                <label class="pt-1 text-decoration-underline">Notes</label>
+                <br />
+                <textarea id="PaymentNotes" disabled></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="CreateBillModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document" style="max-width:1000px; margin-top: 100px;">
+        <div class="modal-content">
+            <form asp-controller="Bills" asp-action="Create" method="post">
+                <div class="modal-header">
+                    <h5>Create Bill</h5>
+                </div>
+                <div class="modal-body">
+                    <partial name="~/Views/Bills/Partials/CreateBillForm.cshtml" model="new Bill_Tracker.Models.ViewModels.VM_Partial_CreateBillForm()" />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Bill</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="CreatePaymentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document" style="max-width:1000px; margin-top: 100px;">
+        <div class="modal-content">
+            <form asp-controller="Payments" asp-action="Create" method="post">
+                <div class="modal-header">
+                    <h5>Create Payment - <span id="CreatePayment_BillName"></span></h5>
+                </div>
+                <div class="modal-body">
+                    <partial name="~/Views/Bills/Partials/CreatePaymentForm.cshtml" model="new Bill_Tracker.Models.ViewModels.VM_Partial_CreatePaymentForm()" />
+                    <input id="hidden_BillId" name="BillId" type="hidden" />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Payment</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/jquery-ui/jquery-ui.min.css" />
+    <link rel="stylesheet" href="~/lib/jquery-ui/jquery-ui.theme.min.css" />
+}
+
+@section Scripts {
+    <script type="text/javascript" src="~/js/moment.min.js"></script>
+    <script type="text/javascript" src="~/lib/jquery-ui/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        $("#BillList").children().toArray().forEach((item, index) => {
+            item.selected = false;
+        });
+
+        $(document).ready(function () {
+            $("#CreatePayment_PaymentDate").datepicker({
+                dateFormat: "mm/dd/yy",
+                changemonth: true,
+                changeyear: true
+            }).datepicker("setDate", new Date());
+        });
+        
+        $("#CreateBillModal").on("show.bs.modal", () => {
+            $("#CreateBill_Name").val("");
+            // More here
+        });
+
+        $("#BillList").change((e) => {
+            var billId = e.target.value;
+            $.ajax("@Url.Action("GetForBill", "Payments")",
+                {
+                    method: "GET",
+                    contentType: "application/json",
+                    data: {
+                        BillId: billId
+                    },
+                    complete: (d) => {
+                        $("#PaymentLoadingSpinner").invisible();
+                        d.responseJSON.forEach((item, index) => {
+                            $("#PaymentList").append(
+                                new Option(
+                                    "" +
+                                    moment(item.paymentDate).format("MM/DD/YY") +
+                                    " - " +
+                                    item.amount +
+                                    " -  " +
+                                    item.notes,
+                                    item.id
+                                )
+                            );
+                        });
+                    }
+                });
+            $("#PaymentLoadingSpinner").visible();
+            $("#PaymentList").find("option").remove().end();
+            $("#PaymentDate").html('<span style="visibility: hidden;">Placeholder</span>');
+            $("#PaymentAmount").html('<span style="visibility: hidden;">Placeholder</span>');
+            $("#PaymentReceipt").html('<span style="visibility: hidden;">Placeholder</span>');
+            $("#btn_payBill").removeAttr("disabled");
+            $("#PaymentNotes").val("");
+            $("#hidden_BillId").val(billId);
+            $("#CreatePayment_BillName").html(e.target.options[e.target.selectedIndex].text);
+        });
+
+        $("#PaymentList").change((e) => {
+            $.ajax("@Url.Action("Get", "Payments")",
+                {
+                    method: "GET",
+                    contentType: "application/json",
+                    data: {
+                        PaymentId: e.target.value
+                    },
+                    complete: (d) => {
+                        $("#PaymentDate").html(moment(d.responseJSON.paymentDate).format("MM/DD/YY"));
+                        $("#PaymentAmount").html("$" + d.responseJSON.amount);
+                        $("#PaymentNotes").val(d.responseJSON.notes);
+                        $("#PaymentReceipt").html(d.responseJSON.receiptLocation);
+                    }
+                });
+        });
+
+        $("#Btn_NotRecurring").click(() => {
+            $("#Div_CreateRecurring").hide();
+        });
+
+        $("#Btn_Recurring").click(() => {
+            $("#Div_CreateRecurring").show();
+        });
+    </script>
+}

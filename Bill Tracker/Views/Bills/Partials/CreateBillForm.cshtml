@@ -1,0 +1,126 @@
+﻿@model Bill_Tracker.Models.ViewModels.VM_Partial_CreateBillForm
+<style>
+    /* TOGGLE STYLING */
+    .toggle {
+        margin: 0 0 1.5rem;
+        box-sizing: border-box;
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+        align-items: stretch;
+    }
+    .toggle input {
+        width: 0;
+        height: 0;
+        position: absolute;
+        left: -9999px;
+    }
+    .toggle input + label {
+        margin: 0;
+        padding: 0.75rem 2rem;
+        box-sizing: border-box;
+        position: relative;
+        display: inline-block;
+        border: solid 1px #DDD;
+        background-color: #FFF;
+        font-size: 1rem;
+        line-height: 140%;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+        transition: border-color 0.15s ease-out, color 0.25s ease-out, background-color 0.15s ease-out, box-shadow 0.15s ease-out;
+        /* ADD THESE PROPERTIES TO SWITCH FROM AUTO WIDTH TO FULL WIDTH */
+        /*flex: 0 0 50%; display: flex; justify-content: center; align-items: center;*/
+        /* ----- */
+    }
+    .toggle input + label:first-of-type {
+        border-radius: 6px 0 0 6px;
+        border-right: none;
+    }
+    .toggle input + label:last-of-type {
+        border-radius: 0 6px 6px 0;
+        border-left: none;
+    }
+    .toggle input:hover + label {
+        border-color: #213140;
+    }
+    .toggle input:checked + label {
+        color: #FFF;
+        z-index: 1;
+    }
+    .toggle input:not(:checked) + label {
+        color: #7D7D7D;
+    }
+    #Btn_Recurring:checked + label,
+    #Btn_RecurringActive:checked + label
+    {
+        background-color: #1AD000;
+        color: #FFF;
+        box-shadow: 0 0 10px rgba(19, 163, 0, 0.5);
+        border-color: #1AD000;
+    }
+    #Btn_NotRecurring:checked + label,
+    #Btn_RecurringInactive:checked + label
+    {
+        background-color: #EA4B4B;
+        color: #FFF;
+        box-shadow: 0 0 10px rgba(251, 102, 102, 0.5);
+        border-color: #EA4B4B;
+    }
+    .Btn_RecurranceFrequency:checked + label {
+        background-color: #3EA5FF;
+        color: #FFFFFF;
+        box-shadow: 0 0 10px rgba(0, 120, 224, .5);
+        border-color: #3EA5FF;
+    }
+    @@media (max-width: 800px) {
+        .toggle input + label {
+            padding: 0.75rem 0.25rem;
+            flex: 0 0 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+
+</style>
+<div class="container">
+    <div class="row">
+        <div class="col-6 pt-2">
+            @Html.LabelFor(m => m.Name)&nbsp;
+            @Html.TextBoxFor(m => m.Name, null, new { id = "CreateBill_Name" })
+        </div>
+        <div class="col-6">
+            <div class="toggle">
+                @Html.RadioButton("Recurring", false, new { id = "Btn_NotRecurring", @checked = "checked" })
+                <label for="Btn_NotRecurring">Not Recurring</label>
+                @Html.RadioButton("Recurring", true, new { id = "Btn_Recurring" })
+                <label for="Btn_Recurring">Recurring</label>
+            </div>
+        </div>
+    </div>
+    <div id="Div_CreateRecurring" class="row" style="display: none;">
+        <hr />
+        <div class="col-6">
+            @Html.LabelFor(m => m.RecurranceActive)
+            <br />
+            <div class="toggle">
+                @Html.RadioButton("RecurranceActive", false, new { id = "Btn_RecurringInactive" })
+                <label for="Btn_RecurringInactive">Inactive</label>
+                @Html.RadioButton("RecurranceActive", true, new { id = "Btn_RecurringActive", @checked = "checked" })
+                <label for="Btn_RecurringActive">Active</label>
+            </div>
+        </div>
+        <div class="col-6">
+            @Html.LabelFor(m => m.RecurranceFrequency)
+            <br />
+            <div class="toggle">
+                @foreach (var rf in Model.RecurranceFrequencies)
+                {
+                    @Html.RadioButton("RecurranceFrequency", rf.Id, new { id = ("Freq_" + rf.NumMonths), @class = "Btn_RecurranceFrequency" })
+                    <label for="@("Freq_"+rf.NumMonths)">@rf.DisplayName</label>
+                }
+            </div>
+        </div>
+    </div>
+</div>
